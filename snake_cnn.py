@@ -18,6 +18,8 @@ takes in a vectorised compression of the state (eg. direction in which danger / 
 
 add short train reward for getting closer to the apple
 
+!! stop logging short train reward after a while 
+
 """
 
 BLOCK_SIZE = 20
@@ -220,6 +222,7 @@ def train():
             print('\n')
             print(f'--- Game {agent.game_count + 1} ---')
             print(f'Score: {score}')
+            print(f'Record: {record}')
             print(f'Explore rate: {agent.explore_rate}')
             print(f'Average reward: {mean_scores[-1]}')
 
