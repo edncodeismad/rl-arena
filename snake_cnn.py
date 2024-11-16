@@ -181,7 +181,7 @@ class AgentNet(nn.Module):
         return self.model(x)
 
 
-def train():
+def train(resume=False):
     scores = []
     mean_scores = []
     tot_score = 0
@@ -189,6 +189,10 @@ def train():
 
     agent = SnakeAgent()
     game = SnakeGame()
+
+    if resume:
+        agent.load_model()
+        agent.explore_rate = 0.4
 
     while True:
         state, dist = agent.get_state(game)
@@ -251,5 +255,5 @@ def play():
             print(f'Record: {record}')
 
 if __name__ == '__main__':
-    train()
+    train(resume=True)
     #play()
