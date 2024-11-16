@@ -209,7 +209,7 @@ def train():
             if agent.game_count % agent.sync_every == 0:
                 agent.sync_target()
 
-            if score > record:
+            if score >= record:
                 agent.save_model()
             record = max(record, score)
 
@@ -221,6 +221,7 @@ def train():
             print(f'--- Game {agent.game_count + 1} ---')
             print(f'Score: {score}')
             print(f'Explore rate: {agent.explore_rate}')
+            print(f'Average reward: {mean_scores[-1]}')
 
 
 def play():
