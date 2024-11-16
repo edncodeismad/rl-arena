@@ -71,7 +71,7 @@ class SnakeGame:
         
         done = False
         reward = 0.0
-        if self._is_collision() or self.frame_count > 50*len(self.snake):
+        if self._is_collision() or self.frame_count > 100*len(self.snake):
             done = True
             reward = -10.0
             return reward, done, self.score
@@ -80,7 +80,7 @@ class SnakeGame:
             reward = 10.0
             self.score += 1
             self._place_food()
-            self.frame_count = 0
+            #self.frame_count = 0
         else:
             self.snake.pop()
         
