@@ -18,6 +18,7 @@ env = gym.make('Pong-v4', render_mode='rgb_array')
 action_size = env.action_space.n
 
 agent = Agent(action_size, 85*80)
+agent.load_model()
 
 if __name__ == '__main__':
     num_episodes = 100
