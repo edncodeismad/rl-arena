@@ -20,7 +20,7 @@ action_size = env.action_space.n
 agent = Agent(action_size, 85*80)
 
 if __name__ == '__main__':
-    num_episodes = 10
+    num_episodes = 100
     num_timesteps = 1200
 
     for i in range(num_episodes):
@@ -45,9 +45,11 @@ if __name__ == '__main__':
                 agent.cache(current_state, reward, action, next_state, done)
 
             if t > agent.burnin: # must be > 20
-                agent.explore_rate = max(agent.explore_rate*agent.explore_decay, agent.min_explore)
                 loss = agent.short_train(current_state, reward, action, next_state, done)
                 tot_loss += loss
+
+                if t % agent.sync_every == 0:
+                    agent.sync_target()
 
                 if t % 200 == 0:
                     print(f'Average loss: {tot_loss/t}')
@@ -56,6 +58,11 @@ if __name__ == '__main__':
             queue.append(next_frame)
 
             if done:
+                agent.explore_rate = max(agent.explore_rate*agent.explore_decay, agent.min_explore)
+                agent.long_train()
+                agent.save_model()
                 break
 
-        # long train on large batch at the end of the game
+        agent.explore_rate = max(agent.explore_rate*agent.explore_decay, agent.min_explore)
+        agent.long_train()
+        agent.save_model()
