@@ -107,6 +107,7 @@ class Agent():
 
     def load_model(self):
         self.online_net.model = torch.load('atari_model.pth')
+        self.sync_target()
 
 class AgentNet(nn.Module):
     def __init__(self, input_size, output_size, lr):
