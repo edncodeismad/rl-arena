@@ -12,7 +12,7 @@ import numpy as np
 class Agent():
     def __init__(self, action_dim, state_dim):
         self.explore_rate = 1.0
-        self.explore_decay = 0.99999
+        self.explore_decay = 0.999
         self.min_explore = 0.05
         self.gamma = 0.9
         self.sync_every = 100 # frames
