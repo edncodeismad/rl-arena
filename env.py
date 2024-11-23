@@ -14,7 +14,7 @@ from model import Agent
 gym.register_envs(ale_py)
 
 #env = gym.make('MsPacman-v4', render_mode='human')
-env = gym.make('Pong-v4', render_mode='human')
+env = gym.make('Pong-v4', render_mode='rgb_array')
 action_size = env.action_space.n
 
 agent = Agent(action_size, 85*80)
