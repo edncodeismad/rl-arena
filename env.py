@@ -14,7 +14,7 @@ from model import Agent
 gym.register_envs(ale_py)
 
 #env = gym.make('MsPacman-v4', render_mode='human')
-env = gym.make('Pong-v4', render_mode='rgb_array')
+env = gym.make('Pong-v4', render_mode='human')
 action_size = env.action_space.n
 
 agent = Agent(action_size, 85*80)
@@ -28,6 +28,7 @@ if __name__ == '__main__':
         frame = agent.get_state(frame)
         queue = deque([frame], maxlen=4)
         tot_loss = 0
+        tot_reward = 0
 
         for t in tqdm(range(num_timesteps)):
             env.render()
@@ -38,6 +39,7 @@ if __name__ == '__main__':
                 print(f'Random action at step {t}')
             next_frame, reward, done, _, _ = env.step(action)
             next_frame = agent.get_state(next_frame)
+            tot_reward += reward
 
             if t > 20:
                 current_state = torch.stack([torch.from_numpy(s) for s in queue])
@@ -53,6 +55,7 @@ if __name__ == '__main__':
 
                 if t % 200 == 0:
                     print(f'Average loss: {tot_loss/t}')
+                    print(f'Average reward: {tot_reward/t}')
                     print(f'Explore rate: {agent.explore_rate}')
 
             queue.append(next_frame)
