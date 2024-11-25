@@ -25,6 +25,7 @@ if __name__ == '__main__':
     num_timesteps = 1200
 
     for i in range(num_episodes):
+        print(f'----- Episode {i+1} -----')
         frame = env.reset()[0]
         frame = agent.get_state(frame)
         queue = deque([frame], maxlen=4)
