@@ -272,5 +272,5 @@ def play():
             print(f'Record: {record}')
 
 if __name__ == '__main__':
-    train(resume=False)
-    #play()
+    #train(resume=False)
+    play()
