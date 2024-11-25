@@ -18,7 +18,7 @@ takes in a vectorised compression of the state (eg. direction in which danger / 
 
 add short train reward for getting closer to the apple
 
-!! stop logging short train reward after a while 
+!! stop logging short train reward after reward stabilises ~ 2x random
 
 """
 
@@ -32,21 +32,6 @@ class StateGrid(Enum):
     WALL = -1
 
 WEIGHTS = 'snake_cnn.pth'
-
-def plot(scores, mean_scores):
-    display.clear_output(wait=True)
-    display.display(plt.gcf())
-    plt.clf()
-    plt.title('Training...')
-    plt.xlabel('Number of Games')
-    plt.ylabel('Score')
-    plt.plot(scores)
-    plt.plot(mean_scores)
-    plt.ylim(ymin=0)
-    plt.text(len(scores)-1, scores[-1], str(scores[-1]))
-    plt.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
-    plt.show(block=False)
-    plt.pause(.1)
 
 class SnakeAgent():
     def __init__(self):
@@ -255,7 +240,6 @@ def train(resume=False):
             scores.append(score)
             tot_score += score
             mean_scores.append(tot_score / agent.game_count)
-            plot(scores, mean_scores)
             print('\n')
             print(f'--- Game {agent.game_count + 1} ---')
             print(f'Score: {score}')
