@@ -31,7 +31,7 @@ class StateGrid(Enum):
     GOAL = 3
     WALL = -1
 
-WEIGHTS = 'snake_cnn.pth'
+WEIGHTS = 'snake_linear.pth'
 
 class SnakeAgent():
     def __init__(self):
