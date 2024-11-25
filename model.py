@@ -18,14 +18,14 @@ class Agent():
         self.sync_every = 100 # frames
         self.burnin = 100
 
-        self.batch_size = 10000
+        self.batch_size = 1000
         self.lr = 0.001
 
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.game_count = 0
 
-        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(100000))
+        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(10000))
 
         self.online_net = AgentNet(self.state_dim, self.action_dim, self.lr) # contains .model and .optimizer
         self.target_net = AgentNet(self.state_dim, self.action_dim, self.lr)
