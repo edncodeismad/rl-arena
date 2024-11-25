@@ -33,21 +33,6 @@ class StateGrid(Enum):
 
 WEIGHTS = 'snake_cnn.pth'
 
-def plot(scores, mean_scores):
-    display.clear_output(wait=True)
-    display.display(plt.gcf())
-    plt.clf()
-    plt.title('Training...')
-    plt.xlabel('Number of Games')
-    plt.ylabel('Score')
-    plt.plot(scores)
-    plt.plot(mean_scores)
-    plt.ylim(ymin=0)
-    plt.text(len(scores)-1, scores[-1], str(scores[-1]))
-    plt.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
-    plt.show(block=False)
-    plt.pause(.1)
-
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
@@ -70,8 +55,10 @@ class SnakeAgent():
             p.requires_grad = False
         self.loss_fn = torch.nn.MSELoss()
         
-    def get_state(self, game): # calculates state vectorl
-        # NOTE HERE -1 DENOTES THE ALLOWED PART AT THE EDGE OF THE BOARD - LATER CHANGE TO BE A WALL AREA
+    def get_state(self, game):
+        # PLOT THIS TO MAKE SURE IT MATCHES - ADD WALLS AS PADDING RATHER THAN THE EDGE
+        # cld use decimals  (normalize representation between 0 and 1)
+        # remove the distance reward
         goal = (int(game.food.y//BLOCK_SIZE-1), int(game.food.x//BLOCK_SIZE-1))
         head = (int(game.head.y//BLOCK_SIZE-1), int(game.head.x//BLOCK_SIZE-1))
         snake = game.snake[1:]
@@ -87,7 +74,7 @@ class SnakeAgent():
         state[:,-1] = StateGrid.WALL.value
 
         dist = [goal[0] - head[0], goal[1] - head[1]]
-        dist = np.sqrt(dist[0]**2 + dist[1]**2)
+        dist = np.sqrt(dist[0]**2 + dist[1]**2) # could use Manhattan dist
         return np.expand_dims(state, axis=0), dist
     
     def choose_action(self, state):
@@ -165,7 +152,7 @@ class AgentNet(nn.Module):
         self.model = self.cnn()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr)
 
-    def cnn(self): 
+    def cnn(self): # simplify
         return nn.Sequential(
             nn.Conv2d(1, 32, 4, 2),
             nn.ReLU(),
@@ -192,7 +179,7 @@ def train(resume=False):
 
     if resume:
         agent.load_model()
-        agent.explore_rate = 0.4
+        agent.explore_rate = 0.5
 
     while True:
         state, dist = agent.get_state(game)
@@ -222,7 +209,6 @@ def train(resume=False):
             scores.append(score)
             tot_score += score
             mean_scores.append(tot_score / agent.game_count)
-            plot(scores, mean_scores)
             print('\n')
             print(f'--- Game {agent.game_count + 1} ---')
             print(f'Score: {score}')
