@@ -154,7 +154,7 @@ class AgentNet(nn.Module):
 
     def cnn(self): # simplify
         return nn.Sequential(
-            nn.Conv2d(1, 8, 4, 1),
+            nn.Conv2d(1, 16, 8, 4),
             nn.ReLU(),
             #nn.Conv2d(32, 32, 4, 2),
             #nn.ReLU(),
