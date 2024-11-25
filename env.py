@@ -32,7 +32,7 @@ if __name__ == '__main__':
         tot_reward = 0
 
         for t in tqdm(range(num_timesteps)):
-            env.render()
+            #env.render()
             if len(queue) == 4:
                 action = agent.choose_action(torch.stack([torch.from_numpy(s) for s in queue]))
             else:
