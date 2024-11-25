@@ -159,7 +159,7 @@ class AgentNet(nn.Module):
             #nn.Conv2d(32, 32, 4, 2),
             #nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(768, 256),
+            nn.Linear(2640, 256),
             nn.ReLU(),
             nn.Linear(256, self.output_size)
         )    
