@@ -201,8 +201,7 @@ def train(resume=False):
                 agent.sync_target()
 
             if score >= record:
-                pass
-                #agent.save_model()
+                agent.save_model()
             record = max(record, score)
 
             scores.append(score)
@@ -240,5 +239,5 @@ def play():
             print(f'Record: {record}')
 
 if __name__ == '__main__':
-    train(resume=True)
-    #play()
+    #train(resume=True)
+    play()
