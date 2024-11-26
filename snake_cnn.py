@@ -36,7 +36,7 @@ WEIGHTS = 'snake_cnn.pth'
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.999
+        self.explore_decay = 0.9995
         self.min_explore = 0.0
         self.gamma = 0.9
         self.sync_every = 10
@@ -177,7 +177,7 @@ def train(resume=False):
 
     if resume:
         agent.load_model()
-        agent.explore_rate = 0.5
+        agent.explore_rate = 0.4
 
     while True:
         state, dist = agent.get_state(game)
@@ -239,5 +239,5 @@ def play():
             print(f'Record: {record}')
 
 if __name__ == '__main__':
-    train(resume=False)
+    train(resume=True)
     #play()
