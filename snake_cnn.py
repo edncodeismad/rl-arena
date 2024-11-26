@@ -56,22 +56,19 @@ class SnakeAgent():
         self.loss_fn = torch.nn.MSELoss()
         
     def get_state(self, game):
-        # PLOT THIS TO MAKE SURE IT MATCHES - ADD WALLS AS PADDING RATHER THAN THE EDGE
-        # cld use decimals  (normalize representation between 0 and 1)
-        # remove the distance reward
-        goal = (int(game.food.y//BLOCK_SIZE-1), int(game.food.x//BLOCK_SIZE-1))
-        head = (int(game.head.y//BLOCK_SIZE-1), int(game.head.x//BLOCK_SIZE-1))
+        goal = (int(game.food.y//BLOCK_SIZE), int(game.food.x//BLOCK_SIZE))
+        head = (int(game.head.y//BLOCK_SIZE), int(game.head.x//BLOCK_SIZE))
+        
         snake = game.snake[1:]
         state = np.zeros((game.h//BLOCK_SIZE, game.w//BLOCK_SIZE))
         state[head] = StateGrid.HEAD.value
         for b in snake:
-            b = (int(b.y//BLOCK_SIZE-1), int(b.x//BLOCK_SIZE-1))
+            b = (int(b.y//BLOCK_SIZE), int(b.x//BLOCK_SIZE))
             state[b] = StateGrid.BODY.value
         state[goal] = StateGrid.GOAL.value
-        state[0,:] = StateGrid.WALL.value
-        state[-1,:] = StateGrid.WALL.value
-        state[:,0] = StateGrid.WALL.value
-        state[:,-1] = StateGrid.WALL.value
+        
+        # TRY WITH AND WITHOUT PADDING
+        #state = np.pad(state, pad_width=1, mode='constant', constant_values=StateGrid.WALL.value)
 
         dist = [goal[0] - head[0], goal[1] - head[1]]
         dist = np.sqrt(dist[0]**2 + dist[1]**2) # could use Manhattan dist
