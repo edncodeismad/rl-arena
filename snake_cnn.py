@@ -36,7 +36,7 @@ WEIGHTS = 'snake_cnn.pth'
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9995
+        self.explore_decay = 0.9999
         self.min_explore = 0.0
         self.gamma = 0.9
         self.sync_every = 10
@@ -61,7 +61,7 @@ class SnakeAgent():
         
         snake = game.snake[1:]
         state = np.zeros((game.h//BLOCK_SIZE, game.w//BLOCK_SIZE))
-        state = np.pad(state, pad_width=1, mode='constant', constant_values=StateGrid.WALL.value)
+        state = np.pad(state, pad_width=1, mode='constant', constant_values=StateGrid.EMPTY.value) # !!! NOT WALLS ANYMORE
         state[head] = StateGrid.HEAD.value
         for b in snake:
             b = (int(b.y//BLOCK_SIZE)+1, int(b.x//BLOCK_SIZE)+1)
@@ -108,7 +108,7 @@ class SnakeAgent():
         self.train_step(state, reward, action, next_state, done)
 
     def train_step(self, state, reward, action, next_state, done):
-        if len(state.shape) == 3:
+        if len(state.shape) == 1:
             state = state.unsqueeze(0)
             next_state = next_state.unsqueeze(0)
             reward = reward.unsqueeze(0)
@@ -152,12 +152,12 @@ class AgentNet(nn.Module):
 
     def cnn(self): # simplify
         return nn.Sequential(
-            nn.Conv2d(1, 16, 8, 4),
-            nn.ReLU(),
+            #nn.Conv2d(1, 16, 8, 4),
+            #nn.ReLU(),
             #nn.Conv2d(32, 32, 4, 2),
             #nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(560, 256),
+            nn.Linear(768, 256),
             nn.ReLU(),
             nn.Linear(256, self.output_size)
         )    
