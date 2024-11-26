@@ -201,6 +201,7 @@ def train(resume=False):
                 agent.sync_target()
 
             if score >= record:
+                pass
                 #agent.save_model()
             record = max(record, score)
 
