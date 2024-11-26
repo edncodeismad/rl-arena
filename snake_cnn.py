@@ -56,14 +56,15 @@ class SnakeAgent():
         self.loss_fn = torch.nn.MSELoss()
         
     def get_state(self, game):
-        goal = (int(game.food.y//BLOCK_SIZE), int(game.food.x//BLOCK_SIZE))
-        head = (int(game.head.y//BLOCK_SIZE), int(game.head.x//BLOCK_SIZE))
+        goal = (int(game.food.y//BLOCK_SIZE)+1, int(game.food.x//BLOCK_SIZE)+1)
+        head = (int(game.head.y//BLOCK_SIZE)+1, int(game.head.x//BLOCK_SIZE)+1)
         
         snake = game.snake[1:]
         state = np.zeros((game.h//BLOCK_SIZE, game.w//BLOCK_SIZE))
+        state = np.pad(state, pad_width=1, mode='constant', constant_values=StateGrid.WALL.value)
         state[head] = StateGrid.HEAD.value
         for b in snake:
-            b = (int(b.y//BLOCK_SIZE), int(b.x//BLOCK_SIZE))
+            b = (int(b.y//BLOCK_SIZE)+1, int(b.x//BLOCK_SIZE)+1)
             state[b] = StateGrid.BODY.value
         state[goal] = StateGrid.GOAL.value
         
