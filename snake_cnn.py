@@ -36,7 +36,7 @@ WEIGHTS = 'snake_cnn.pth'
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9999
+        self.explore_decay = 0.9995
         self.min_explore = 0.0
         self.gamma = 0.9
         self.sync_every = 10
@@ -157,7 +157,7 @@ class AgentNet(nn.Module):
             #nn.Conv2d(32, 32, 4, 2),
             #nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(768, 256),
+            nn.Linear(884, 256),
             nn.ReLU(),
             nn.Linear(256, self.output_size)
         )    
