@@ -137,6 +137,11 @@ class SnakeGame:
             y -= BLOCK_SIZE
 
         self.head = Point(x, y)
+
+    def get_frame(self):
+        frame = pygame.surfarray.array3d(self.display)
+        frame = frame.transpose(2, 1, 0)
+        return frame
             
 
 if __name__ == '__main__':
