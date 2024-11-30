@@ -11,11 +11,9 @@ from enum import Enum
 import numpy as np
 from snake_game import SnakeGame, Point, Direction
 
-plt.ion()
-
 BLOCK_SIZE = 20
 NUM_EPISODES = 1000
-WEIGHTS = 'snake_pixel_optimized.pth'
+WEIGHTS = 'snake_pixel_gpu.pth'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # Use CUDA if available
 print(f'---- DEVICE: {DEVICE} ----\n')
 
