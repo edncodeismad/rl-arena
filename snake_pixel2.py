@@ -15,6 +15,8 @@ from snake_game import SnakeGame, Point, Direction
 plt.ion()
 
 BLOCK_SIZE = 20
+NUM_EPISODES = 1000
+WEIGHTS = 'snake_pixel_optimized.pth'
 
 class StateGrid(Enum):
     EMPTY = 0
@@ -23,23 +25,21 @@ class StateGrid(Enum):
     GOAL = 3
     WALL = -1
 
-WEIGHTS = 'snake_pixel_optimized.pth'
-
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
         self.explore_decay = 0.9995  # Slower decay for better exploration early on
         self.min_explore = 0.05
-        self.gamma = 0.95  # Higher gamma for longer-term reward optimization
-        self.sync_every = 20
+        self.gamma = 0.99  # Higher gamma for longer-term reward optimization
+        self.sync_every = 1000
 
         self.batch_size = 512  # Smaller batch sizes for better gradient updates
-        self.lr = 0.0001  # Reduced learning rate for stable learning
+        self.lr = 0.00025  # Reduced learning rate for stable learning
 
         self.action_dim = 3
         self.game_count = 0
 
-        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(200000))  # Increased memory for replay
+        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(1000000))  # Increased memory for replay
 
         self.online_net = AgentNet(self.action_dim, self.lr)
         self.target_net = AgentNet(self.action_dim, self.lr)
@@ -124,6 +124,7 @@ class SnakeAgent():
 
     def save_model(self):
         torch.save(self.online_net.state_dict(), WEIGHTS)
+        print(f'-- Saved weights to {WEIGHTS} --')
 
     def load_model(self):
         self.online_net.load_state_dict(torch.load(WEIGHTS))
@@ -134,20 +135,23 @@ class AgentNet(nn.Module):
     def __init__(self, output_size, lr):
         super().__init__()
         self.output_size = output_size
-        self.hidden_dim = 512  # Increased for better representation
+        self.hidden_dim = 512
         self.model = self.build_model()
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)  # AdamW for better regularization
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=lr, momentum=0.95, alpha=0.95, eps=0.01)
 
     def build_model(self):
         return nn.Sequential(
-            nn.Conv2d(2, 16, kernel_size=8, stride=4),  # More filters for better feature extraction
+            nn.Conv2d(2, 16, kernel_size=8, stride=4),
             nn.ReLU(),
+            nn.Dropout(0.2),
             nn.Conv2d(16, 32, kernel_size=4, stride=2),
             nn.ReLU(),
+            nn.Dropout(0.2),
             nn.Conv2d(32, 32, kernel_size=3, stride=1),
             nn.ReLU(),
+            nn.Dropout(0.2),
             nn.Flatten(),
-            nn.Linear(5632, self.hidden_dim),  # Adjust based on input size
+            nn.Linear(5632, self.hidden_dim),
             nn.ReLU(),
             nn.Linear(self.hidden_dim, self.output_size),
         )
@@ -167,7 +171,7 @@ def train(resume=False):
 
     if resume:
         agent.load_model()
-        agent.explore_rate = 0.1
+        agent.explore_rate = 0.9
 
     state, _ = agent.get_state(game)
     state_deque = deque([state, state], maxlen=2)
@@ -216,6 +220,9 @@ def train(resume=False):
             if score > 0:
                 agent.save_model()
 
+            if agent.game_count > NUM_EPISODES:
+                break
+
 
 def play():
     agent = SnakeAgent()
@@ -250,3 +257,4 @@ def play():
 
 if __name__ == '__main__':
     train(resume=False)
+    #play()
