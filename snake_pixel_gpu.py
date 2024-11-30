@@ -40,7 +40,7 @@ class SnakeAgent():
         self.action_dim = 3
         self.game_count = 0
 
-        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(1000000))  # Increased memory for replay
+        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(200000))  # Increased memory for replay
 
         self.online_net = AgentNet(self.action_dim, self.lr).to(DEVICE)
         self.target_net = AgentNet(self.action_dim, self.lr).to(DEVICE)
