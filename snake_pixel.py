@@ -40,9 +40,9 @@ class SnakeAgent():
         self.explore_decay = 0.999
         self.min_explore = 0.0
         self.gamma = 0.9
-        self.sync_every = 10
+        self.sync_every = 50
 
-        self.batch_size = 10000
+        self.batch_size = 5000
         self.lr = 0.001
 
         self.action_dim = 3
@@ -148,7 +148,7 @@ class AgentNet(nn.Module):
         return nn.Sequential(
             nn.Conv2d(2, 8, 8, 4),
             nn.ReLU(),
-            nn.Conv2d(8, 16, 8, 4),
+            nn.Conv2d(8, 8, 8, 4),
             nn.ReLU(),
             nn.Flatten(),
             nn.Linear(768, self.hidden_dim),
