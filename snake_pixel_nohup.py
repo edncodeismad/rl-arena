@@ -83,7 +83,7 @@ class SnakeAgent():
         self.action_dim = 3
         self.game_count = 0
 
-        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(500000))
+        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(100000))
 
         self.online_net = AgentNet(self.action_dim, self.lr) # contains .model and .optimizer
         self.target_net = AgentNet(self.action_dim, self.lr)
