@@ -42,4 +42,4 @@ if __name__ == "__main__":
             print(f"{TRAINING_SCRIPT} is running.")
             os.system("tail nohup.out")
         
-        time.sleep(5)
+        time.sleep(120)
