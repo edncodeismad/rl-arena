@@ -27,7 +27,7 @@ class StateGrid(Enum):
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9995  # Slower decay for better exploration early on
+        self.explore_decay = 0.999975  # Slower decay for better exploration early on
         self.min_explore = 0.05
         self.gamma = 0.99  # Higher gamma for longer-term reward optimization
         self.sync_every = 1000
