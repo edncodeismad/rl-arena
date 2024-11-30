@@ -21,14 +21,6 @@ def check_if_running():
 def restart_script():
     print(f"Restarting {TRAINING_SCRIPT}...")
     os.system(COMMAND)
-    return
-    with open(LOG_FILE, "a") as log:
-        subprocess.Popen(
-            ["nohup", "python", TRAINING_SCRIPT],
-            stdout=log,
-            stderr=log,
-            preexec_fn=os.setpgrp
-        )
 
 if __name__ == "__main__":
     os.system(COMMAND)
