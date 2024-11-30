@@ -72,7 +72,7 @@ EXPLORE_RATE_FILE = 'train_info.json'
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.999
+        self.explore_decay = 0.9998
         self.min_explore = 0.0
         self.gamma = 0.9
         self.sync_every = 10
