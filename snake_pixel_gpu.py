@@ -79,6 +79,7 @@ class SnakeAgent():
     def long_train(self):
         if len(self.memory) < self.batch_size:
             return
+        print('Beginning training...')
         sample = self.memory.sample(self.batch_size)
         state, reward, action, next_state, done = (sample.get(key) for key in ('state', 'reward', 'action', 'next_state', 'done'))
         self.train_step(state.to(DEVICE), reward.to(DEVICE), action.to(DEVICE), next_state.to(DEVICE), done.to(DEVICE))
