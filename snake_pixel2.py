@@ -3,20 +3,23 @@ import torch.nn as nn
 import pygame
 import matplotlib.pyplot as plt
 from IPython import display
-from torchrl.data import TensorDictReplayBuffer
-from torchrl.data.replay_buffers import LazyTensorStorage
+from stable_baselines3.common.buffers import ReplayBuffer
 from tensordict import TensorDict
 from collections import deque
 from enum import Enum
 
 import numpy as np
 from snake_game import SnakeGame, Point, Direction
+from gymnasium import spaces
 
 plt.ion()
+obs_space = spaces.Box(-1, 3, shape=(2,120,160))
+action_space = spaces.Discrete(3)
 
 BLOCK_SIZE = 20
 NUM_EPISODES = 1000
 WEIGHTS = 'snake_pixel_optimized.pth'
+SAVE_FILE = 'checkpoint.pth'
 
 class StateGrid(Enum):
     EMPTY = 0
@@ -28,26 +31,26 @@ class StateGrid(Enum):
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9995  # Slower decay for better exploration early on
+        self.explore_decay = 0.9995
         self.min_explore = 0.05
-        self.gamma = 0.99  # Higher gamma for longer-term reward optimization
-        self.sync_every = 1000
+        self.gamma = 0.99
+        self.sync_every = 100
 
-        self.batch_size = 512  # Smaller batch sizes for better gradient updates
-        self.lr = 0.00025  # Reduced learning rate for stable learning
+        self.batch_size = 512
+        self.lr = 0.00025
 
         self.action_dim = 3
         self.game_count = 0
 
-        self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(1000000))  # Increased memory for replay
-
+        #self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(1000000))
+        self.memory = ReplayBuffer(100000, obs_space, action_space, optimize_memory_usage=True, handle_timeout_termination=False)
         self.online_net = AgentNet(self.action_dim, self.lr)
         self.target_net = AgentNet(self.action_dim, self.lr)
         self.target_net.load_state_dict(self.online_net.state_dict())
         for p in self.target_net.parameters():
             p.requires_grad = False
 
-        self.loss_fn = nn.SmoothL1Loss()  # Huber loss for better handling of outliers
+        self.loss_fn = nn.SmoothL1Loss()
 
     def get_state(self, game):
         frame = game.get_frame().transpose(1, 2, 0)
@@ -69,19 +72,21 @@ class SnakeAgent():
         return action
 
     def cache(self, state, reward, action, next_state, done):
-        self.memory.add(TensorDict({
-            'state': torch.tensor(state, dtype=torch.float32),
-            'reward': torch.tensor(reward, dtype=torch.float32),
-            'action': torch.tensor(action, dtype=torch.int32),
-            'next_state': torch.tensor(next_state, dtype=torch.float32),
-            'done': torch.tensor(done, dtype=torch.int32)
-        }))
+        self.memory.add(
+            torch.tensor(state, dtype=torch.float32),
+            torch.tensor(next_state, dtype=torch.float32),
+            torch.tensor(action, dtype=torch.int32),
+            torch.tensor(reward, dtype=torch.float32),
+            torch.tensor(done, dtype=torch.int32),
+            None
+        )
 
     def long_train(self):
-        if len(self.memory) < self.batch_size:
+        if self.memory.size() < self.batch_size:
             return
         sample = self.memory.sample(self.batch_size)
-        state, reward, action, next_state, done = (sample.get(key) for key in ('state', 'reward', 'action', 'next_state', 'done'))
+        state, next_state, action, reward, done = sample.observations, sample.next_observations, sample.actions, sample.rewards, sample.dones
+        #state, reward, action, next_state, done = (sample.get(key) for key in ('state', 'reward', 'action', 'next_state', 'done'))
         self.train_step(state, reward, action, next_state, done)
         print('Training...')
 
