@@ -21,6 +21,8 @@ NUM_EPISODES = 1000
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # Use GPU if available
+
 class StateGrid(Enum):
     EMPTY = 0
     HEAD = 1
@@ -42,10 +44,9 @@ class SnakeAgent():
         self.action_dim = 3
         self.game_count = 0
 
-        #self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(1000000))
         self.memory = ReplayBuffer(100000, obs_space, action_space, optimize_memory_usage=True, handle_timeout_termination=False)
-        self.online_net = AgentNet(self.action_dim, self.lr)
-        self.target_net = AgentNet(self.action_dim, self.lr)
+        self.online_net = AgentNet(self.action_dim, self.lr).to(device)
+        self.target_net = AgentNet(self.action_dim, self.lr).to(device)
         self.target_net.load_state_dict(self.online_net.state_dict())
         for p in self.target_net.parameters():
             p.requires_grad = False
@@ -66,7 +67,7 @@ class SnakeAgent():
         if np.random.uniform() < self.explore_rate:
             action = np.random.randint(0, self.action_dim)
         else:
-            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(device)
             Q_vals = self.online_net(state_tensor)
             action = torch.argmax(Q_vals).item()
         return action
@@ -85,14 +86,23 @@ class SnakeAgent():
         if self.memory.size() < self.batch_size:
             return
         sample = self.memory.sample(self.batch_size)
-        state, next_state, action, reward, done = sample.observations, sample.next_observations, sample.actions, sample.rewards, sample.dones
-        #state, reward, action, next_state, done = (sample.get(key) for key in ('state', 'reward', 'action', 'next_state', 'done'))
+        state, next_state, action, reward, done = (
+            sample.observations.to(device),
+            sample.next_observations.to(device),
+            sample.actions.to(device),
+            sample.rewards.to(device),
+            sample.dones.to(device)
+        )
         self.train_step(state, reward, action, next_state, done)
-        print('Training...')
 
     def short_train(self, state, reward, action, next_state, done):
-        state, reward, action, next_state, done = torch.tensor(state, dtype=torch.float32), torch.tensor(reward,  dtype=torch.float32), torch.tensor(action,  dtype=torch.int32), torch.tensor(next_state,  dtype=torch.float32), torch.tensor(done,  dtype=torch.int32)
-        state, next_state = state, next_state
+        state, reward, action, next_state, done = (
+            torch.tensor(state, dtype=torch.float32).to(device),
+            torch.tensor(reward, dtype=torch.float32).to(device),
+            torch.tensor(action, dtype=torch.int32).to(device),
+            torch.tensor(next_state, dtype=torch.float32).to(device),
+            torch.tensor(done, dtype=torch.int32).to(device)
+        )
         self.train_step(state, reward, action, next_state, done)
 
     def train_step(self, state, reward, action, next_state, done):
@@ -132,7 +142,7 @@ class SnakeAgent():
         print(f'-- Saved weights to {WEIGHTS} --')
 
     def load_model(self):
-        self.online_net.load_state_dict(torch.load(WEIGHTS))
+        self.online_net.load_state_dict(torch.load(WEIGHTS, map_location=device))
         print(f'--- Loaded weights from {WEIGHTS} ---')
 
 
@@ -162,7 +172,7 @@ class AgentNet(nn.Module):
         )
 
     def forward(self, x):
-        return self.model(x)
+        return self.model(x.to(device))
 
 
 def train(resume=False):
@@ -221,7 +231,6 @@ def train(resume=False):
             print(f'Explore rate: {agent.explore_rate}')
             print(f'Average reward: {mean_scores[-1]}')
 
-            #if score >= record:
             if score > 0:
                 agent.save_model()
 
@@ -259,6 +268,7 @@ def play():
             print(f'--- Game {agent.game_count + 1} ---')
             print(f'Score: {score}')
             print(f'Record: {record}')
+
 
 if __name__ == '__main__':
     train(resume=False)
