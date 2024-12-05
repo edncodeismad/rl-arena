@@ -22,6 +22,7 @@ WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # Use GPU if available
+print(f'DEVICE: {device}')
 
 class StateGrid(Enum):
     EMPTY = 0
