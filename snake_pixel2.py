@@ -192,7 +192,7 @@ def train(resume=False):
 
     if resume:
         agent.load_model()
-        agent.explore_rate = 0.9
+        #agent.explore_rate = 0.9
 
     state, _ = agent.get_state(game)
     state_deque = deque([state, state], maxlen=2)
@@ -282,5 +282,5 @@ def play():
 
 
 if __name__ == '__main__':
-    train(resume=False)
+    train(resume=True)
     #play()
