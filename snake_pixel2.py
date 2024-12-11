@@ -7,6 +7,7 @@ from stable_baselines3.common.buffers import ReplayBuffer
 from tensordict import TensorDict
 from collections import deque
 from enum import Enum
+import wandb
 
 import numpy as np
 from snake_game import SnakeGame, Point, Direction
@@ -21,8 +22,12 @@ NUM_EPISODES = 1000
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # Use GPU if available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'DEVICE: {device}')
+
+run = wandb.init(
+    project='pixel-dqn'
+)
 
 class StateGrid(Enum):
     EMPTY = 0
@@ -227,10 +232,15 @@ def train(resume=False):
             mean_scores.append(tot_score / agent.game_count)
             print('\n')
             print(f'--- Game {agent.game_count} ---')
-            print(f'Score: {score}')
-            print(f'Record: {record}')
-            print(f'Explore rate: {agent.explore_rate}')
-            print(f'Average reward: {mean_scores[-1]}')
+            #print(f'Score: {score}')
+            #print(f'Record: {record}')
+            #print(f'Explore rate: {agent.explore_rate}')
+            #print(f'Average reward: {mean_scores[-1]}')
+            wandb.log({
+                'score': score,
+                'explore rate': agent.explore_rate,
+                'average reward': mean_scores[-1]
+            })
 
             if score > 0:
                 agent.save_model()
