@@ -250,7 +250,7 @@ def train(resume=False):
 def play():
     agent = SnakeAgent()
     game = SnakeGame()
-    game._update_ui()
+    #game._update_ui()
 
     for p in agent.online_net.model.parameters():
         p.requires_grad = False
