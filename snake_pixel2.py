@@ -25,9 +25,7 @@ SAVE_FILE = 'checkpoint.pth'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'DEVICE: {device}')
 
-run = wandb.init(
-    project='pixel-dqn'
-)
+#run = wandb.init(project='pixel-dqn')
 
 class StateGrid(Enum):
     EMPTY = 0
