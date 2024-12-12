@@ -18,7 +18,7 @@ obs_space = spaces.Box(-1, 3, shape=(2,120,160))
 action_space = spaces.Discrete(3)
 
 BLOCK_SIZE = 20
-NUM_EPISODES = 1000
+NUM_EPISODES = 10000
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
@@ -282,5 +282,5 @@ def play():
 
 
 if __name__ == '__main__':
-    train(resume=True)
+    train(resume=False)
     #play()
