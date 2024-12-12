@@ -1,0 +1,16 @@
+{"time":"2024-12-11T23:58:34.329056191Z","level":"INFO","msg":"using version","core version":"0.19.0"}
+{"time":"2024-12-11T23:58:34.3290613Z","level":"INFO","msg":"created symlink","path":"/home/paperspace/edn/rl-arena/wandb/run-20241211_235834-ttc5buc1/logs/debug-core.log"}
+{"time":"2024-12-11T23:58:34.433171637Z","level":"INFO","msg":"created new stream","id":"ttc5buc1"}
+{"time":"2024-12-11T23:58:34.433264437Z","level":"INFO","msg":"stream: started","id":"ttc5buc1"}
+{"time":"2024-12-11T23:58:34.433276095Z","level":"INFO","msg":"writer: Do: started","stream_id":"ttc5buc1"}
+{"time":"2024-12-11T23:58:34.433431836Z","level":"INFO","msg":"sender: started","stream_id":"ttc5buc1"}
+{"time":"2024-12-11T23:58:34.433520914Z","level":"INFO","msg":"handler: started","stream_id":"ttc5buc1"}
+{"time":"2024-12-11T23:58:34.734874513Z","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-12T02:25:23.382430699Z","level":"INFO","msg":"stream: closing","id":"ttc5buc1"}
+{"time":"2024-12-12T02:25:23.382481233Z","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-12T02:25:23.383569906Z","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-12T02:25:23.69833598Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-12T02:25:23.81684853Z","level":"INFO","msg":"handler: closed","stream_id":"ttc5buc1"}
+{"time":"2024-12-12T02:25:23.816884552Z","level":"INFO","msg":"sender: closed","stream_id":"ttc5buc1"}
+{"time":"2024-12-12T02:25:23.816883955Z","level":"INFO","msg":"writer: Close: closed","stream_id":"ttc5buc1"}
+{"time":"2024-12-12T02:25:23.816976565Z","level":"INFO","msg":"stream: closed","id":"ttc5buc1"}

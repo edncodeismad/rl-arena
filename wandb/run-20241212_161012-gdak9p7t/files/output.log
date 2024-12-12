@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/paperspace/edn/rl-arena/snake_pixel2.py", line 286, in <module>
+    play()
+  File "/home/paperspace/edn/rl-arena/snake_pixel2.py", line 255, in play
+    game._update_ui()
+AttributeError: 'SnakeGame' object has no attribute '_update_ui'
+Traceback (most recent call last):
+  File "/home/paperspace/edn/rl-arena/snake_pixel2.py", line 286, in <module>
+    play()
+  File "/home/paperspace/edn/rl-arena/snake_pixel2.py", line 255, in play
+    game._update_ui()
+AttributeError: 'SnakeGame' object has no attribute '_update_ui'

@@ -1,0 +1,43 @@
+{
+  "os": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+  "python": "CPython 3.10.12",
+  "startedAt": "2024-12-11T23:58:08.972666Z",
+  "program": "/home/paperspace/edn/rl-arena/snake_pixel2.py",
+  "codePath": "snake_pixel2.py",
+  "git": {
+    "remote": "git@github.com:edncodeismad/rl-arena.git",
+    "commit": "9027ea548a5af07f322b53a0884f2c527fa32089"
+  },
+  "email": "e.d.888anonymous@gmail.com",
+  "root": "/home/paperspace/edn/rl-arena",
+  "host": "pshdefj6jiiw",
+  "username": "paperspace",
+  "executable": "/home/paperspace/edn/venv/bin/python",
+  "codePathLocal": "snake_pixel2.py",
+  "cpu_count": 8,
+  "cpu_count_logical": 8,
+  "gpu": "Quadro P4000",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "50869391360",
+      "used": "15348039680"
+    }
+  },
+  "memory": {
+    "total": "31529164800"
+  },
+  "cpu": {
+    "count": 8,
+    "countLogical": 8
+  },
+  "gpu_nvidia": [
+    {
+      "name": "Quadro P4000",
+      "memoryTotal": "8589934592",
+      "cudaCores": 1792,
+      "architecture": "Pascal"
+    }
+  ],
+  "cudaVersion": "12.4"
+}
