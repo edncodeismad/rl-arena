@@ -25,7 +25,7 @@ SAVE_FILE = 'checkpoint.pth'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'DEVICE: {device}')
 
-#run = wandb.init(project='pixel-dqn')
+run = wandb.init(project='pixel-dqn')
 
 class StateGrid(Enum):
     EMPTY = 0
@@ -255,7 +255,9 @@ def play():
     for p in agent.online_net.model.parameters():
         p.requires_grad = False
     agent.load_model()
-    agent.explore_rate = 0.1
+    agent.online_net.eval()
+    agent.target_net.eval()
+    agent.explore_rate = 0.01
     record = 0
 
     state, _  = agent.get_state(game)
@@ -280,5 +282,5 @@ def play():
 
 
 if __name__ == '__main__':
-    #train(resume=True)
-    play()
+    train(resume=True)
+    #play()
