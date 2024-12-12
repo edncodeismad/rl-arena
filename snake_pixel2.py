@@ -282,5 +282,5 @@ def play():
 
 
 if __name__ == '__main__':
-    train(resume=True)
-    #play()
+    #train(resume=True)
+    play()
