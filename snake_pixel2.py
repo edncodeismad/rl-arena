@@ -23,7 +23,7 @@ try with matrix first then pixels
 """
 
 BLOCK_SIZE = 20
-NUM_EPISODES = 1000
+NUM_EPISODES = 10000
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
