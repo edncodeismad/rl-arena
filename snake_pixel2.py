@@ -42,7 +42,7 @@ class StateGrid(Enum):
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9995
+        self.explore_decay = 0.9998
         self.min_explore = 0.05
         self.gamma = 0.99
         self.sync_every = 100
