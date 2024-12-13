@@ -1,24 +1,29 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import pygame
 import matplotlib.pyplot as plt
 from IPython import display
 from stable_baselines3.common.buffers import ReplayBuffer
-from tensordict import TensorDict
 from collections import deque
 from enum import Enum
 import wandb
 
 import numpy as np
-from snake_game import SnakeGame, Point, Direction
+from snake_game import SnakeGame
 from gymnasium import spaces
 
 plt.ion()
 obs_space = spaces.Box(-1, 3, shape=(2,120,160))
+obs_space = spaces.Box(-1, 3, shape=(2,24,32))
 action_space = spaces.Discrete(3)
 
+"""
+try with matrix first then pixels
+"""
+
 BLOCK_SIZE = 20
-NUM_EPISODES = 10000
+NUM_EPISODES = 1000
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
@@ -37,7 +42,7 @@ class StateGrid(Enum):
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9998
+        self.explore_decay = 0.9995
         self.min_explore = 0.05
         self.gamma = 0.99
         self.sync_every = 100
@@ -49,8 +54,8 @@ class SnakeAgent():
         self.game_count = 0
 
         self.memory = ReplayBuffer(100000, obs_space, action_space, optimize_memory_usage=True, handle_timeout_termination=False)
-        self.online_net = AgentNet(self.action_dim, self.lr).to(device)
-        self.target_net = AgentNet(self.action_dim, self.lr).to(device)
+        self.online_net = ResNet(self.action_dim, self.lr).to(device) #
+        self.target_net = ResNet(self.action_dim, self.lr).to(device)
         self.target_net.load_state_dict(self.online_net.state_dict())
         for p in self.target_net.parameters():
             p.requires_grad = False
@@ -58,6 +63,24 @@ class SnakeAgent():
         self.loss_fn = nn.SmoothL1Loss()
 
     def get_state(self, game):
+        goal = (int(game.food.y//BLOCK_SIZE-1), int(game.food.x//BLOCK_SIZE-1))
+        head = (int(game.head.y//BLOCK_SIZE-1), int(game.head.x//BLOCK_SIZE-1))
+        snake = game.snake[1:]
+        state = np.zeros((game.h//BLOCK_SIZE, game.w//BLOCK_SIZE))
+        state[head] = StateGrid.HEAD.value
+        for b in snake:
+            b = (int(b.y//BLOCK_SIZE-1), int(b.x//BLOCK_SIZE-1))
+            state[b] = StateGrid.BODY.value
+        state[goal] = StateGrid.GOAL.value
+        state[0,:] = StateGrid.WALL.value
+        state[-1,:] = StateGrid.WALL.value
+        state[:,0] = StateGrid.WALL.value
+        state[:,-1] = StateGrid.WALL.value
+
+        dist = [goal[0] - head[0], goal[1] - head[1]]
+        dist = np.sqrt(dist[0]**2 + dist[1]**2)
+        return np.expand_dims(state, axis=0), dist
+    
         frame = game.get_frame().transpose(1, 2, 0)
         frame = np.dot(frame[..., :3], [0.299, 0.587, 0.114])  # Convert to grayscale
         frame = frame[::4, ::4]  # Downsample
@@ -179,6 +202,70 @@ class AgentNet(nn.Module):
         return self.model(x.to(device))
 
 
+class ResNet(nn.Module):
+    def __init__(self, output_size, lr, num_blocks=3):
+        super().__init__()
+        self.output_size = output_size
+        self.hidden_dim = 32
+        self.num_blocks = num_blocks
+        
+        self.startBlock = nn.Sequential(
+            nn.Conv2d(2, self.hidden_dim, kernel_size=4, padding=2),
+            nn.BatchNorm2d(self.hidden_dim),
+            nn.ReLU()
+        )
+        
+        self.backBone = nn.ModuleList(
+            [ResBlock(self.hidden_dim) for _ in range(self.num_blocks)]
+        )
+        self.backBone = nn.Sequential(*self.backBone)
+        
+        self.head = nn.Sequential(
+            nn.Conv2d(self.hidden_dim, 8, kernel_size=4, padding=2),
+            nn.BatchNorm2d(8),
+            nn.ReLU(),
+            nn.Conv2d(8, 8, kernel_size=4, padding=2),
+            nn.BatchNorm2d(8),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(9120, 256),
+            nn.ReLU(),
+            nn.Linear(256, self.output_size)
+        )
+
+        self.model = self.build_model()
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=lr, momentum=0.95, alpha=0.95, eps=0.01)
+
+    def build_model(self):
+        return nn.Sequential(
+            self.startBlock,
+            self.backBone,
+            self.head
+        )
+        
+    def forward(self, x):
+        return self.model(x.to(device))
+        
+        
+class ResBlock(nn.Module):
+    def __init__(self, num_hidden):
+        super().__init__()
+        self.conv1 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(num_hidden)
+        self.conv2 = nn.Conv2d(num_hidden, num_hidden, kernel_size=4, padding=2)
+        self.bn2 = nn.BatchNorm2d(num_hidden)
+        
+    def forward(self, x):
+        residual = x
+        x = self.bn1(self.conv1(x))
+        x += residual
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        #x += residual
+        x = F.relu(x)
+        return x
+        
+
 def train(resume=False):
     scores = []
     mean_scores = []
@@ -190,7 +277,7 @@ def train(resume=False):
 
     if resume:
         agent.load_model()
-        #agent.explore_rate = 0.9
+        agent.explore_rate = 0.9
 
     state, _ = agent.get_state(game)
     state_deque = deque([state, state], maxlen=2)
@@ -250,14 +337,12 @@ def train(resume=False):
 def play():
     agent = SnakeAgent()
     game = SnakeGame()
-    #game._update_ui()
+    game._update_ui()
 
     for p in agent.online_net.model.parameters():
         p.requires_grad = False
     agent.load_model()
-    agent.online_net.eval()
-    agent.target_net.eval()
-    agent.explore_rate = 0.01
+    agent.explore_rate = 0.1
     record = 0
 
     state, _  = agent.get_state(game)
