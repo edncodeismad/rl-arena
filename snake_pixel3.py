@@ -18,7 +18,8 @@ obs_space = spaces.Box(-1, 3, shape=(2,120,160))
 action_space = spaces.Discrete(3)
 
 BLOCK_SIZE = 20
-NUM_EPISODES = 100000
+NUM_EPISODES = 20000
+EPOCHS = 50
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
@@ -37,7 +38,7 @@ class StateGrid(Enum):
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.99995
+        self.explore_decay = 0.99986
         self.min_explore = 0.05
         self.gamma = 0.99
         self.sync_every = 100
@@ -253,7 +254,6 @@ def train(resume=False):
 
     if resume:
         agent.load_model()
-        agent.explore_rate = 0.9
 
     state, _ = agent.get_state(game)
     state_deque = deque([state, state], maxlen=2)
@@ -291,7 +291,7 @@ def train(resume=False):
             scores.append(score)
             tot_score += score
             mean_scores.append(tot_score / agent.game_count)
-            print('\n')
+            #print('\n')
             print(f'--- Game {agent.game_count} ---')
             #print(f'Score: {score}')
             #print(f'Record: {record}')
@@ -344,4 +344,6 @@ def play():
 
 if __name__ == '__main__':
     train(resume=False)
+    for epoch in range(EPOCHS-1):
+        train(resume=True)
     #play()
