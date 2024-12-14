@@ -18,7 +18,7 @@ obs_space = spaces.Box(-1, 3, shape=(2,120,160))
 action_space = spaces.Discrete(3)
 
 BLOCK_SIZE = 20
-NUM_EPISODES = 10000
+NUM_EPISODES = 20000
 WEIGHTS = 'snake_pixel_optimized.pth'
 SAVE_FILE = 'checkpoint.pth'
 
@@ -37,7 +37,7 @@ class StateGrid(Enum):
 class SnakeAgent():
     def __init__(self):
         self.explore_rate = 1.0
-        self.explore_decay = 0.9995
+        self.explore_decay = 0.9999
         self.min_explore = 0.05
         self.gamma = 0.99
         self.sync_every = 100
