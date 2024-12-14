@@ -21,7 +21,7 @@ BLOCK_SIZE = 20
 NUM_EPISODES = 20000
 EPOCHS = 50
 WEIGHTS = 'snake_pixel_optimized.pth'
-SAVE_FILE = 'checkpoint.pth'
+OPTIMIZER_SAVE = 'snake_pixel_optim.pth'
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'DEVICE: {device}')
@@ -148,6 +148,7 @@ class SnakeAgent():
 
     def load_model(self):
         self.online_net.load_state_dict(torch.load(WEIGHTS, map_location=device))
+        self.online_net.optimizer.load_state_dict(torch.load(OPTIMIZER_SAVE, map_location=device))
         print(f'--- Loaded weights from {WEIGHTS} ---')
 
 
@@ -307,6 +308,7 @@ def train(resume=False):
                 agent.save_model()
 
             if agent.game_count > NUM_EPISODES:
+                torch.save(agent.online_net.optimizer.state_dict(), OPTIMIZER_SAVE)
                 break
 
 
