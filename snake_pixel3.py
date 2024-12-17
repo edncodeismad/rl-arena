@@ -8,7 +8,6 @@ from stable_baselines3.common.buffers import ReplayBuffer
 from collections import deque
 from enum import Enum
 import wandb
-
 import numpy as np
 from snake_game import SnakeGame
 from gymnasium import spaces
