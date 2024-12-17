@@ -293,7 +293,7 @@ def train(resume=False):
             tot_score += score
             mean_scores.append(tot_score / agent.game_count)
             #print('\n')
-            print(f'--- Game {agent.game_count} ---')
+            #print(f'--- Game {agent.game_count} ---')
             #print(f'Score: {score}')
             #print(f'Record: {record}')
             #print(f'Explore rate: {agent.explore_rate}')
@@ -310,7 +310,7 @@ def train(resume=False):
             if agent.game_count > NUM_EPISODES:
                 torch.save(agent.online_net.optimizer.state_dict(), OPTIMIZER_SAVE)
                 break
-
+    return mean_scores[-1]
 
 def play():
     agent = SnakeAgent()
@@ -347,5 +347,6 @@ def play():
 if __name__ == '__main__':
     train(resume=False)
     for epoch in range(EPOCHS-1):
-        train(resume=True)
+        ms = train(resume=True)
+        print(ms)
     #play()
