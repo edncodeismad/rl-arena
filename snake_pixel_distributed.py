@@ -258,41 +258,79 @@ class ResBlock(nn.Module):
         return x
 
 def worker(proc_id, agent, n_episodes, sync_every, log_rewards=False):
-    tot_rewards = 0
-    
+    tot_score = 0
+    record = 0
+    scores = []
+    mean_scores = []
+
     for episode in range(n_episodes):
         game = SnakeGame()  # Create new game instance
-        state = agent.get_state(game)
+        state, dist_to_food = agent.get_state(game)
+        state_deque = deque([state, state], maxlen=2)
         episode_reward = 0
+        score = 0
 
         while True:
-            action = agent.choose_action(state)
-            done, reward, next_state = game.play_step(action)
-            agent.cache(state, reward, action, next_state, done)
+            input = np.concatenate([state_deque[0], state_deque[1]], axis=0)
+            action = agent.choose_action(input)
+            reward, done, score = game.play_step(action)
+            next_state, next_dist = agent.get_state(game)
+            state_deque.append(next_state)
+            next_input = np.concatenate([state_deque[0], state_deque[1]], axis=0)
 
-            agent.short_train(state, reward, action, next_state, done)
-            state = next_state
+            # Reward shaping based on distance to the goal
+            reward += (dist_to_food - next_dist) * 0.1  # Encourage moving closer to the goal
+            if done:
+                reward -= 10  # Penalize game over
+            elif score > 0:
+                reward += 10  # Reward eating food
+
+            # Training and caching
+            agent.short_train(input, reward, action, next_input, done)
+            agent.cache(input, reward, action, next_input, done)
+
             episode_reward += reward
+            state = next_state
+            dist_to_food = next_dist
 
             if done:
+                agent.long_train()
+                game.reset()
                 agent.game_count += 1
-                print(f"Process {proc_id}, Episode {episode}, Games Played: {agent.game_count}")
+                agent.explore_rate = max(agent.min_explore, agent.explore_rate * agent.explore_decay)
+
+                if agent.game_count % sync_every == 0:
+                    agent.sync_target()
+
+                record = max(record, score)
+                scores.append(score)
+                tot_score += score
+                mean_scores.append(tot_score / agent.game_count)
+
+                print(f"Process {proc_id}, Episode {episode}, Score: {score}, Record: {record}")
+
+                if log_rewards and proc_id == 0:  # Only log on the main process
+                    wandb.log({
+                        'episode': episode,
+                        'score': score,
+                        'explore rate': agent.explore_rate,
+                        'average reward': mean_scores[-1]
+                    })
+
+                if score > 0 and proc_id == 0:  # Save model only on the main process
+                    agent.save_model()
                 break
 
-        episode_reward_tensor = torch.tensor(episode_reward).to(device)
+        # Synchronize rewards across workers
+        episode_reward_tensor = torch.tensor(episode_reward).to(agent.device)
         dist.all_reduce(episode_reward_tensor, op=dist.ReduceOp.SUM)
         total_reward = episode_reward_tensor.item() / dist.get_world_size()
 
-        if log_rewards and proc_id == 0:  # Only log on master process
-            wandb.log({"episode": episode, "reward": total_reward})
-
-        total_rewards += total_reward
-        
         if episode % sync_every == 0:
             agent.sync_target()
 
-    return total_rewards
-    
+    return mean_scores[-1]  # Return the last mean score
+
 def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewards):
     # Initialize the process group for distributed training
     dist.init_process_group(backend='gloo', rank=rank, world_size=size)
@@ -300,13 +338,16 @@ def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewar
     # Initialize wandb logging only for master process (rank 0)
     if rank == 0:
         run = wandb.init(project='pixel-dqn')
-    
-    total_rewards = worker(rank, agent, n_episodes_per_worker, sync_every, log_rewards=rank == 0)
-    
+
+    # Perform the training in each worker
+    mean_score = worker(rank, agent, n_episodes_per_worker, sync_every, log_rewards=rank == 0)
+
+    # Cleanup the distributed process group
     dist.destroy_process_group()
 
     if rank == 0:
         run.finish()
+    return mean_score
 
 def parallel_training(n_processes=WORLD_SIZE, n_episodes_per_worker=500):
     agent = SnakeAgent()
@@ -320,6 +361,7 @@ def parallel_training(n_processes=WORLD_SIZE, n_episodes_per_worker=500):
     for p in processes:
         p.join()
 
+    print("Training finished across all processes.")
 
 if __name__ == "__main__":
     os.environ['WORLD_SIZE'] = str(WORLD_SIZE)
