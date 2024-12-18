@@ -336,7 +336,7 @@ def worker(proc_id, agent, n_episodes, sync_every, log_rewards=False):
 
 def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewards):
     print(f"Process {rank} initializing.")
-    dist.init_process_group(backend='gloo', rank=rank, world_size=size)
+    dist.init_process_group(backend='gloo', rank=rank, world_size=size, init_method='tcp://123.45.67.89:29500')
     
     # Initialize wandb logging only for master process (rank 0)
     if rank == 0:
@@ -370,6 +370,6 @@ def parallel_training(n_processes=WORLD_SIZE, n_episodes_per_worker=500):
 
 if __name__ == "__main__":
     os.environ['WORLD_SIZE'] = str(WORLD_SIZE)
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '8080'
+    os.environ['MASTER_ADDR'] = '34.122.7.215'
+    os.environ['MASTER_PORT'] = '29500'
     parallel_training()
