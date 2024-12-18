@@ -13,6 +13,7 @@ from snake_game import SnakeGame
 from gymnasium import spaces
 import torch.multiprocessing as mp
 import torch.distributed as dist
+import os
 
 plt.ion()
 obs_space = spaces.Box(-1, 3, shape=(2,120,160))
@@ -23,6 +24,7 @@ NUM_EPISODES = 20000
 EPOCHS = 50
 WEIGHTS = 'snake_pixel_optimized.pth'
 OPTIMIZER_SAVE = 'snake_pixel_optim.pth'
+WORLD_SIZE = 4 # number of processes
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'DEVICE: {device}')
@@ -306,7 +308,7 @@ def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewar
     if rank == 0:
         run.finish()
 
-def parallel_training(n_processes=4, n_episodes_per_worker=500):
+def parallel_training(n_processes=WORLD_SIZE, n_episodes_per_worker=500):
     agent = SnakeAgent()
 
     processes = []
@@ -320,4 +322,7 @@ def parallel_training(n_processes=4, n_episodes_per_worker=500):
 
 
 if __name__ == "__main__":
+    os.environ['WORLD_SIZE'] = str(WORLD_SIZE)
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '8080'
     parallel_training()
