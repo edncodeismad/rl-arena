@@ -51,9 +51,13 @@ class SnakeAgent():
         self.game_count = 0
 
         self.memory = ReplayBuffer(100000, obs_space, action_space, optimize_memory_usage=True, handle_timeout_termination=False)
-        self.online_net = ResNet(self.action_dim, self.lr).to(device).share_memory_()
-        self.target_net = ResNet(self.action_dim, self.lr).to(device).share_memory_()
+        self.online_net = ResNet(self.action_dim, self.lr).to(device)
+        self.target_net = ResNet(self.action_dim, self.lr).to(device)
         self.target_net.load_state_dict(self.online_net.state_dict())
+
+        self.online_net.share_memory()
+        self.target_net.share_memory()
+        
         for p in self.target_net.parameters():
             p.requires_grad = False
 
