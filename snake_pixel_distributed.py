@@ -251,10 +251,13 @@ class ResBlock(nn.Module):
         x = F.relu(x)
         return x
 
-def worker(proc_id, agent, n_episodes, sync_every):
+def worker(proc_id, agent, n_episodes, sync_every, log_rewards=False):
+    tot_rewards = 0
+    
     for episode in range(n_episodes):
         game = SnakeGame()  # Create new game instance
         state = agent.get_state(game)
+        episode_reward = 0
 
         while True:
             action = agent.choose_action(state)
@@ -263,27 +266,48 @@ def worker(proc_id, agent, n_episodes, sync_every):
 
             agent.short_train(state, reward, action, next_state, done)
             state = next_state
+            episode_reward += reward
 
             if done:
                 agent.game_count += 1
                 print(f"Process {proc_id}, Episode {episode}, Games Played: {agent.game_count}")
                 break
 
+        episode_reward_tensor = torch.tensor(episode_reward).to(device)
+        dist.all_reduce(episode_reward_tensor, op=dist.ReduceOp.SUM)
+        total_reward = episode_reward_tensor.item() / dist.get_world_size()
+
+        if log_rewards and proc_id == 0:  # Only log on master process
+            wandb.log({"episode": episode, "reward": total_reward})
+
+        total_rewards += total_reward
+        
         if episode % sync_every == 0:
             agent.sync_target()
 
-def init_process(rank, size, agent, n_episodes_per_worker, sync_every):
+    return total_rewards
+    
+def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewards):
     # Initialize the process group for distributed training
     dist.init_process_group(backend='gloo', rank=rank, world_size=size)
-    worker(rank, agent, n_episodes_per_worker, sync_every)
+    
+    # Initialize wandb logging only for master process (rank 0)
+    if rank == 0:
+        run = wandb.init(project='pixel-dqn')
+    
+    total_rewards = worker(rank, agent, n_episodes_per_worker, sync_every, log_rewards=rank == 0)
+    
     dist.destroy_process_group()
+
+    if rank == 0:
+        run.finish()
 
 def parallel_training(n_processes=4, n_episodes_per_worker=500):
     agent = SnakeAgent()
 
     processes = []
     for rank in range(n_processes):
-        p = mp.Process(target=init_process, args=(rank, n_processes, agent, n_episodes_per_worker, agent.sync_every))
+        p = mp.Process(target=init_process, args=(rank, n_processes, agent, n_episodes_per_worker, agent.sync_every, True))
         p.start()
         processes.append(p)
 
