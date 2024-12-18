@@ -158,7 +158,6 @@ class SnakeAgent():
     def save_model(self, rank=0):
         if rank == 0:  # Only the master process saves the model
             torch.save(self.online_net.state_dict(), WEIGHTS)
-            print(f'-- Saved weights to {WEIGHTS} --')
 
     def load_model(self):
         self.online_net.load_state_dict(torch.load(WEIGHTS, map_location=device))
@@ -263,6 +262,8 @@ def worker(proc_id, agent, n_episodes, sync_every, log_rewards=False):
     scores = []
     mean_scores = []
 
+    print(f"Worker {proc_id} started training.")
+
     for episode in range(n_episodes):
         game = SnakeGame()  # Create new game instance
         state, dist_to_food = agent.get_state(game)
@@ -319,6 +320,7 @@ def worker(proc_id, agent, n_episodes, sync_every, log_rewards=False):
 
                 if score > 0 and proc_id == 0:  # Save model only on the main process
                     agent.save_model()
+                    print(f"Worker {proc_id} saving model.")
                 break
 
         # Synchronize rewards across workers
@@ -329,10 +331,11 @@ def worker(proc_id, agent, n_episodes, sync_every, log_rewards=False):
         if episode % sync_every == 0:
             agent.sync_target()
 
+    print(f"Worker {proc_id} finished training.")
     return mean_scores[-1]  # Return the last mean score
 
 def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewards):
-    # Initialize the process group for distributed training
+    print(f"Process {rank} initializing.")
     dist.init_process_group(backend='gloo', rank=rank, world_size=size)
     
     # Initialize wandb logging only for master process (rank 0)
@@ -347,9 +350,11 @@ def init_process(rank, size, agent, n_episodes_per_worker, sync_every, log_rewar
 
     if rank == 0:
         run.finish()
+    print(f"Process {rank} finished with mean score {mean_score}.")
     return mean_score
 
 def parallel_training(n_processes=WORLD_SIZE, n_episodes_per_worker=500):
+    print(f"Spawning {n_processes} processes for training.")
     agent = SnakeAgent()
 
     processes = []
